@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Screenshot frame around a 2x2 block of crisp pixels. Content stays inside the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M33,45V38a5,5 0,0 1,5 -5H45 M63,33H70a5,5 0,0 1,5 5V45 M75,63V70a5,5 0,0 1,-5 5H63 M45,75H38a5,5 0,0 1,-5 -5V63"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M45,43h6a2,2 0,0 1,2 2v6a2,2 0,0 1,-2 2h-6a2,2 0,0 1,-2 -2v-6a2,2 0,0 1,2 -2z M57,55h6a2,2 0,0 1,2 2v6a2,2 0,0 1,-2 2h-6a2,2 0,0 1,-2 -2v-6a2,2 0,0 1,2 -2z" />
+    <path
+        android:fillAlpha="0.55"
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M57,43h6a2,2 0,0 1,2 2v6a2,2 0,0 1,-2 2h-6a2,2 0,0 1,-2 -2v-6a2,2 0,0 1,2 -2z M45,55h6a2,2 0,0 1,2 2v6a2,2 0,0 1,-2 2h-6a2,2 0,0 1,-2 -2v-6a2,2 0,0 1,2 -2z" />
+</vector>

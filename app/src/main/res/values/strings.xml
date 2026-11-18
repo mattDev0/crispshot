@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Crispshot</string>
+    <string name="tile_label">Auto-HD</string>
+    <string name="tile_on">On</string>
+    <string name="tile_off">Off</string>
+    <string name="share_hd_label">WhatsApp HD</string>
+</resources>
