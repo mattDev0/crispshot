@@ -62,9 +62,11 @@ jobs:
           apksigner="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner"
           apk=app/build/outputs/apk/release/app-release.apk
           "$apksigner" verify --verbose --print-certs "$apk" | tee "$RUNNER_TEMP/verify.txt"
-          actual=$(sed -nE 's/^Signer #1 certificate SHA-256 digest: ([0-9a-f]+)$/\1/p' "$RUNNER_TEMP/verify.txt")
-          if [ "$actual" != "$EXPECTED_CERT_SHA256" ]; then
-            echo "::error::APK signed with unexpected certificate: $actual"
+          # Every scheme's signer line must carry the pinned certificate, and there must be exactly one signer.
+          grep -q '^Number of signers: 1$' "$RUNNER_TEMP/verify.txt" || { echo "::error::Expected exactly one signer"; exit 1; }
+          digests=$(sed -nE 's/^.*[Ss]igner.* certificate SHA-256 digest: ([0-9a-f]+)$/\1/p' "$RUNNER_TEMP/verify.txt" | sort -u)
+          if [ "$digests" != "$EXPECTED_CERT_SHA256" ]; then
+            echo "::error::APK signed with unexpected certificate(s): ${digests:-none found}"
             exit 1
           fi
 

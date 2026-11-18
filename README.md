@@ -100,7 +100,7 @@ Release builds are unsigned unless `CRISPSHOT_KEYSTORE_FILE`, `CRISPSHOT_KEYSTOR
 
 ## Verifying a download
 
-Releases from 1.0.2 onward are signed with this certificate (SHA-256):
+Releases from 1.0.3 onward are signed with this certificate (SHA-256):
 
 ```
 55:38:F8:7D:A6:E4:C3:1F:B0:C6:A0:52:4A:26:B6:B2:1E:80:A7:C5:93:65:B0:89:6C:E2:93:04:F4:71:2B:A1
