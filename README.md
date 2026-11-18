@@ -58,7 +58,8 @@ screenshot editor saves over the original or saves a new copy.
 
 ## Setup
 
-1. Install the APK from [Releases](../../releases). It requires Android 11 or newer.
+1. Install the APK from [Releases](../../releases). It requires Android 11 or newer. If you already
+   have 1.0.0 or 1.0.1 installed, uninstall it first — 1.0.3 onward uses a new signing key.
 2. Open Crispshot and work through the checklist:
    - **All files access**, so it can replace screenshots in place.
    - **Battery: Unrestricted**, so Android doesn't delay it when the app hasn't been opened for a while.
@@ -71,6 +72,8 @@ and pick it.
 ## Trade-offs
 
 - Enlarged screenshots take more storage, about 1.5–2.5× the original.
+- If you back up `Pictures/Screenshots/` to Google Photos or another cloud service, the enlarged files
+  count against your cloud storage quota and may upload twice when replaced in place.
 - HD sends use more mobile data than Standard.
 - WhatsApp HD is still a JPEG. For byte-exact files, send as a document (Attach → Document).
 - WhatsApp also sends a Standard-quality copy with each HD photo, so a recipient may see it until they tap
