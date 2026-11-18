@@ -2,14 +2,33 @@
 
 Crispshot keeps screenshots sharp when you send them on WhatsApp.
 
-WhatsApp only offers its **HD** photo option when an image's long edge is at least 2800 px. A phone
-screenshot (1080×2400) or a laptop screenshot (1920×1080) falls below that, so it goes out as a small,
-blurry Standard-quality JPEG with smeared text.
+WhatsApp only offers its **HD** photo option for large images. A typical phone screenshot (1080×2400) or
+laptop screenshot (1920×1080) is too small, so it goes out as a small, blurry Standard-quality JPEG with
+smeared text.
 
 Crispshot enlarges each new screenshot 2× with nearest-neighbour scaling (every pixel becomes an identical
 2×2 block), so WhatsApp unlocks HD. WhatsApp then halves it back to the original size, which means the
 recipient gets the screenshot at its native resolution in HD quality: no blur, and no change to how you
 send.
+
+## Do you need it?
+
+A screenshot is the same size as your screen's current resolution. Whether WhatsApp offers HD depends on
+the screenshot's long side:
+
+| Screenshot long side | Typical phones | WhatsApp HD |
+|---|---|---|
+| Up to about 2460 px | Most phones at 1080p (FHD+), e.g. 1080×2400, 1080×2340, 1080×2412 | Not offered: **Crispshot helps** |
+| About 2500–2799 px | 1.5K screens, e.g. 1220×2712 | Varies. Some report HD works without help |
+| 2800 px or more | QHD+ phones at full resolution, e.g. 1440×3120, 1440×3200 | Offered: you don't need Crispshot |
+
+Many QHD+ phones ship set to a lower 1080p display mode to save battery, so their screenshots fall in the
+first row unless full resolution is turned on in display settings.
+
+To check your phone, take a screenshot, send it to yourself on WhatsApp, and see whether the **HD** button
+appears. You can also open the screenshot's details in your gallery app to see its size.
+
+Crispshot leaves screenshots that are already 2800 px or more untouched.
 
 ## How it works
 
