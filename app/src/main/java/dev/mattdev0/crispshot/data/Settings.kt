@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dev.mattdev0.crispshot.media.WritePath
+import dev.mattdev0.crispshot.policy.ProcessedSize
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -31,7 +32,7 @@ data class LogEntry(
     val restored: Boolean = false,
 )
 
-/** DataStore-backed preferences: Auto-HD flag, Quick Share toggle, processed IDs (500), and recent log (30). */
+/** DataStore-backed preferences: Auto-HD flag, Quick Share toggle, processed sizes (500), and recent log (30). */
 class Settings(private val context: Context) {
     val enabledFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[KEY_ENABLED] ?: false
@@ -41,8 +42,8 @@ class Settings(private val context: Context) {
         prefs[KEY_QUICK_SHARE_ENABLED] ?: true
     }
 
-    val processedIdsFlow: Flow<Set<Long>> = context.dataStore.data.map { prefs ->
-        parseProcessedIds(prefs[KEY_PROCESSED_IDS]).toSet()
+    private val processedFlow: Flow<Map<Long, ProcessedSize>> = context.dataStore.data.map { prefs ->
+        parseProcessed(prefs[KEY_PROCESSED_IDS]).toMap()
     }
 
     val recentLogFlow: Flow<List<LogEntry>> = context.dataStore.data.map { prefs ->
@@ -75,17 +76,17 @@ class Settings(private val context: Context) {
         }
     }
 
-    suspend fun getProcessedIds(): Set<Long> = processedIdsFlow.first()
+    suspend fun getProcessed(): Map<Long, ProcessedSize> = processedFlow.first()
 
-    suspend fun markProcessed(mediaId: Long) {
+    /** Records the size [mediaId] had when Crispshot finished with it; keeps the newest entries. */
+    suspend fun markProcessed(mediaId: Long, size: ProcessedSize) {
         context.dataStore.edit { prefs ->
-            val list = parseProcessedIds(prefs[KEY_PROCESSED_IDS]).toMutableList()
-            list.remove(mediaId)
-            list.add(mediaId)
+            val list = parseProcessed(prefs[KEY_PROCESSED_IDS]).filter { it.first != mediaId }.toMutableList()
+            list.add(mediaId to size)
             while (list.size > MAX_PROCESSED_IDS) {
                 list.removeAt(0)
             }
-            prefs[KEY_PROCESSED_IDS] = list.joinToString(",")
+            prefs[KEY_PROCESSED_IDS] = list.joinToString(",") { (id, s) -> "$id:${s.width}:${s.height}" }
         }
     }
 
@@ -107,9 +108,16 @@ class Settings(private val context: Context) {
         }
     }
 
-    private fun parseProcessedIds(raw: String?): List<Long> {
+    /** Parses `id:width:height` entries; a bare `id` from older versions has an unknown size. */
+    private fun parseProcessed(raw: String?): List<Pair<Long, ProcessedSize>> {
         if (raw.isNullOrBlank()) return emptyList()
-        return raw.split(",").mapNotNull { it.trim().toLongOrNull() }
+        return raw.split(",").mapNotNull { item ->
+            val parts = item.trim().split(":")
+            val id = parts[0].toLongOrNull() ?: return@mapNotNull null
+            val w = parts.getOrNull(1)?.toIntOrNull()
+            val h = parts.getOrNull(2)?.toIntOrNull()
+            id to if (w != null && h != null) ProcessedSize(w, h) else ProcessedSize.UNKNOWN
+        }
     }
 
     private fun parseLogEntries(raw: String?): List<LogEntry> {

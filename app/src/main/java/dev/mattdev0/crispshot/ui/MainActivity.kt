@@ -34,6 +34,7 @@ import androidx.lifecycle.lifecycleScope
 import dev.mattdev0.crispshot.App
 import dev.mattdev0.crispshot.media.BackupPruneWorker
 import dev.mattdev0.crispshot.media.RestoreResult
+import dev.mattdev0.crispshot.policy.ProcessedSize
 import dev.mattdev0.crispshot.watch.ScreenshotJob
 import dev.mattdev0.crispshot.watch.ToggleTileService
 import kotlinx.coroutines.Dispatchers
@@ -143,6 +144,11 @@ class MainActivity : ComponentActivity() {
                             when (result) {
                                 is RestoreResult.Success -> {
                                     app.settings.markRestored(mediaId)
+                                    // Record the restored size so the original isn't enlarged again.
+                                    app.settings.markProcessed(
+                                        mediaId,
+                                        ProcessedSize(result.metadata.width, result.metadata.height),
+                                    )
                                     refreshTick++
                                     snackbarHostState.showSnackbar(
                                         "Restored ${result.metadata.displayName} (${result.metadata.width}×${result.metadata.height})",

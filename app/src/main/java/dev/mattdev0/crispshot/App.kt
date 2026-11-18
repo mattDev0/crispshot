@@ -10,6 +10,7 @@ import dev.mattdev0.crispshot.media.InPlaceWriter
 import dev.mattdev0.crispshot.media.MediaStoreRepo
 import dev.mattdev0.crispshot.media.Upscaler
 import dev.mattdev0.crispshot.policy.HdPolicy
+import dev.mattdev0.crispshot.policy.ProcessedSize
 import dev.mattdev0.crispshot.watch.ProcessorState
 import dev.mattdev0.crispshot.watch.ScreenshotProcessor
 import java.io.File
@@ -50,10 +51,10 @@ class App : Application(), Configuration.Provider {
                 override suspend fun getPolicy(): HdPolicy =
                     policy.copy(sources = HdPolicy.sourcesFor(settings.isQuickShareEnabled()))
 
-                override suspend fun getProcessedIds(): Set<Long> = settings.getProcessedIds()
+                override suspend fun getProcessed(): Map<Long, ProcessedSize> = settings.getProcessed()
 
-                override suspend fun markProcessed(mediaId: Long) {
-                    settings.markProcessed(mediaId)
+                override suspend fun markProcessed(mediaId: Long, size: ProcessedSize) {
+                    settings.markProcessed(mediaId, size)
                 }
 
                 override suspend fun appendLog(entry: LogEntry) {

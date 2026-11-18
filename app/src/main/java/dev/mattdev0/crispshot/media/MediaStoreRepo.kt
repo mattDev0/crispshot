@@ -33,12 +33,13 @@ class MediaStoreRepo(private val context: Context) : MediaIo, ScreenshotStore {
         val pathClauses = sources.joinToString(" OR ") {
             "${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?"
         }
-        val selection = "($pathClauses) AND ${MediaStore.Images.Media.DATE_ADDED} >= ?"
+        val selection = "($pathClauses) AND (${MediaStore.Images.Media.DATE_ADDED} >= ? OR ${MediaStore.Images.Media.DATE_MODIFIED} >= ?)"
         val args = buildList {
             for (source in sources) {
                 add(if (source.matchAnywhere) "%${source.pathPrefix}%" else "${source.pathPrefix}%")
             }
-            add(sinceEpochSec.toString())
+            add(sinceEpochSec.toString()) // DATE_ADDED
+            add(sinceEpochSec.toString()) // DATE_MODIFIED
         }.toTypedArray()
         val sort = "${MediaStore.Images.Media._ID} DESC"
         val rows = mutableListOf<MediaRow>()

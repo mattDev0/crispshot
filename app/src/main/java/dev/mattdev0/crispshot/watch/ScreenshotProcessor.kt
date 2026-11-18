@@ -6,6 +6,7 @@ import dev.mattdev0.crispshot.media.WriteResult
 import dev.mattdev0.crispshot.policy.Decision
 import dev.mattdev0.crispshot.policy.HdPolicy
 import dev.mattdev0.crispshot.policy.ScalePlan
+import dev.mattdev0.crispshot.policy.ProcessedSize
 import dev.mattdev0.crispshot.policy.ScreenshotFilter
 import dev.mattdev0.crispshot.policy.ScreenshotSource
 import dev.mattdev0.crispshot.policy.SkipReason
@@ -25,8 +26,8 @@ interface ProcessorWriter {
 interface ProcessorState {
     suspend fun isEnabled(): Boolean
     suspend fun getPolicy(): HdPolicy
-    suspend fun getProcessedIds(): Set<Long>
-    suspend fun markProcessed(mediaId: Long)
+    suspend fun getProcessed(): Map<Long, ProcessedSize>
+    suspend fun markProcessed(mediaId: Long, size: ProcessedSize)
     suspend fun appendLog(entry: LogEntry)
 }
 
@@ -51,36 +52,36 @@ class ScreenshotProcessor(
         }
 
         val policy = state.getPolicy()
-        val processedIds = state.getProcessedIds().toMutableSet()
+        val processed = state.getProcessed().toMutableMap()
 
         if (ids == null) {
             val sinceEpochSec = clockSec() - policy.recentWindowSec
             val rows = store.queryRecent(sinceEpochSec, policy.sources)
             for (row in rows) {
-                handleCandidate(row, policy, processedIds)
+                handleCandidate(row, policy, processed)
             }
             return
         }
 
         for (id in ids.distinct()) {
             val row = store.queryById(id) ?: continue
-            handleCandidate(row, policy, processedIds)
+            handleCandidate(row, policy, processed)
         }
     }
 
     private suspend fun handleCandidate(
         initialRow: MediaRow,
         policy: HdPolicy,
-        processedIds: MutableSet<Long>,
+        processed: MutableMap<Long, ProcessedSize>,
     ) {
         var row = initialRow
-        var decision = ScreenshotFilter.evaluate(row, clockSec(), policy, processedIds)
+        var decision = ScreenshotFilter.evaluate(row, clockSec(), policy, processed)
 
         // Short single re-query when a matching screenshot is still pending or populating dims.
         if (shouldRequeryOnce(row, decision)) {
             delayFn(PENDING_REQUERY_DELAY_MS)
             row = store.queryById(row.id) ?: return
-            decision = ScreenshotFilter.evaluate(row, clockSec(), policy, processedIds)
+            decision = ScreenshotFilter.evaluate(row, clockSec(), policy, processed)
         }
 
         when (decision) {
@@ -90,8 +91,9 @@ class ScreenshotProcessor(
             is Decision.Process -> {
                 when (val result = writer.process(row, decision.plan)) {
                     is WriteResult.Success -> {
-                        processedIds.add(row.id)
-                        state.markProcessed(row.id)
+                        val size = ProcessedSize(result.newWidth, result.newHeight)
+                        processed[row.id] = size
+                        state.markProcessed(row.id, size)
                         state.appendLog(
                             LogEntry(
                                 mediaId = result.mediaId,

@@ -5,6 +5,7 @@ import dev.mattdev0.crispshot.media.MediaRow
 import dev.mattdev0.crispshot.media.WritePath
 import dev.mattdev0.crispshot.media.WriteResult
 import dev.mattdev0.crispshot.policy.HdPolicy
+import dev.mattdev0.crispshot.policy.ProcessedSize
 import dev.mattdev0.crispshot.policy.ScalePlan
 import dev.mattdev0.crispshot.policy.ScreenshotSource
 import kotlinx.coroutines.test.runTest
@@ -75,15 +76,15 @@ class ScreenshotProcessorTest {
     private class FakeState(
         var enabled: Boolean = true,
         val policy: HdPolicy = HdPolicy(),
-        val processed: MutableSet<Long> = mutableSetOf(),
+        val processed: MutableMap<Long, ProcessedSize> = mutableMapOf(),
     ) : ProcessorState {
         val logs = mutableListOf<LogEntry>()
 
         override suspend fun isEnabled(): Boolean = enabled
         override suspend fun getPolicy(): HdPolicy = policy
-        override suspend fun getProcessedIds(): Set<Long> = processed.toSet()
-        override suspend fun markProcessed(mediaId: Long) {
-            processed.add(mediaId)
+        override suspend fun getProcessed(): Map<Long, ProcessedSize> = processed.toMap()
+        override suspend fun markProcessed(mediaId: Long, size: ProcessedSize) {
+            processed[mediaId] = size
         }
 
         override suspend fun appendLog(entry: LogEntry) {
@@ -161,12 +162,12 @@ class ScreenshotProcessorTest {
     }
 
     @Test
-    fun alreadyProcessedId_isSkippedWithoutWrite() = runTest {
+    fun alreadyProcessedAtSameSize_isSkippedWithoutWrite() = runTest {
         val store = FakeStore().apply {
             enqueueRow(401L, sampleRow(id = 401L))
         }
         val writer = FakeWriter()
-        val state = FakeState(processed = mutableSetOf(401L))
+        val state = FakeState(processed = mutableMapOf(401L to ProcessedSize(1080, 2400)))
         val processor = ScreenshotProcessor(
             store = store,
             writer = writer,
@@ -200,10 +201,30 @@ class ScreenshotProcessorTest {
         processor.processIds(listOf(501L, 501L))
 
         assertEquals(listOf(501L), writer.writtenIds)
-        assertEquals(setOf(501L), state.processed)
+        assertEquals(mapOf(501L to ProcessedSize(2160, 4800)), state.processed)
         assertEquals(1, state.logs.size)
         assertEquals(2160, state.logs.first().newWidth)
         assertEquals(4800, state.logs.first().newHeight)
         assertEquals(9_999L, state.logs.first().timestampMs)
+    }
+
+    @Test
+    fun cropSavedOverProcessedScreenshot_isEnlargedAgain() = runTest {
+        val store = FakeStore().apply {
+            enqueueRow(601L, sampleRow(id = 601L, width = 1080, height = 564))
+        }
+        val writer = FakeWriter()
+        val state = FakeState(processed = mutableMapOf(601L to ProcessedSize(2160, 4800)))
+        val processor = ScreenshotProcessor(
+            store = store,
+            writer = writer,
+            state = state,
+            delayFn = {},
+            clockSec = { nowSec },
+        )
+
+        processor.processIds(listOf(601L))
+
+        assertEquals(listOf(601L), writer.writtenIds)
     }
 }

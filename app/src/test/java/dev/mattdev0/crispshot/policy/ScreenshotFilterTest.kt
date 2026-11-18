@@ -17,6 +17,7 @@ class ScreenshotFilterTest {
         height: Int = 2400,
         mimeType: String = "image/png",
         dateAddedSec: Long = now - 5L,
+        dateModifiedSec: Long = dateAddedSec,
         isPending: Int = 0,
     ) = MediaRow(
         id = id,
@@ -26,20 +27,20 @@ class ScreenshotFilterTest {
         height = height,
         mimeType = mimeType,
         dateAddedSec = dateAddedSec,
-        dateModifiedSec = dateAddedSec,
+        dateModifiedSec = dateModifiedSec,
         isPending = isPending,
     )
 
     @Test
     fun validPngAndJpegScreenshots_areProcessed() {
-        val pngDecision = ScreenshotFilter.evaluate(baseRow(mimeType = "image/png"), now, policy, emptySet())
+        val pngDecision = ScreenshotFilter.evaluate(baseRow(mimeType = "image/png"), now, policy, emptyMap())
         assertTrue(pngDecision is Decision.Process)
         assertEquals(
             ScalePlan(2160, 4800, filter = false, factor = 2),
             (pngDecision as Decision.Process).plan,
         )
 
-        val jpgDecision = ScreenshotFilter.evaluate(baseRow(mimeType = "IMAGE/JPEG"), now, policy, emptySet())
+        val jpgDecision = ScreenshotFilter.evaluate(baseRow(mimeType = "IMAGE/JPEG"), now, policy, emptyMap())
         assertTrue(jpgDecision is Decision.Process)
     }
 
@@ -49,7 +50,7 @@ class ScreenshotFilterTest {
             baseRow(relativePath = "DCIM/Camera/"),
             now,
             policy,
-            emptySet(),
+            emptyMap(),
         )
         assertTrue(decision is Decision.Skip)
         val skip = decision as Decision.Skip
@@ -63,7 +64,7 @@ class ScreenshotFilterTest {
             baseRow(relativePath = "Pictures/screenshots/"),
             now,
             policy,
-            emptySet(),
+            emptyMap(),
         )
         assertTrue(decision is Decision.Process)
     }
@@ -74,7 +75,7 @@ class ScreenshotFilterTest {
             baseRow(isPending = 1),
             now,
             policy,
-            emptySet(),
+            emptyMap(),
         )
         assertTrue(decision is Decision.Skip)
         val skip = decision as Decision.Skip
@@ -88,7 +89,7 @@ class ScreenshotFilterTest {
             baseRow(dateAddedSec = now - policy.recentWindowSec - 1L),
             now,
             policy,
-            emptySet(),
+            emptyMap(),
         )
         assertTrue(decision is Decision.Skip)
         val skip = decision as Decision.Skip
@@ -102,7 +103,7 @@ class ScreenshotFilterTest {
             baseRow(mimeType = "image/webp"),
             now,
             policy,
-            emptySet(),
+            emptyMap(),
         )
         assertTrue(decision is Decision.Skip)
         val skip = decision as Decision.Skip
@@ -116,7 +117,7 @@ class ScreenshotFilterTest {
             baseRow(id = 42L),
             now,
             policy,
-            processedIds = setOf(42L),
+            processed = mapOf(42L to ProcessedSize(1080, 2400)),
         )
         assertTrue(decision is Decision.Skip)
         val skip = decision as Decision.Skip
@@ -130,7 +131,7 @@ class ScreenshotFilterTest {
             baseRow(width = 1080, height = 4000),
             now,
             policy,
-            emptySet(),
+            emptyMap(),
         )
         assertTrue(decision is Decision.Skip)
         val skip = decision as Decision.Skip
@@ -149,7 +150,7 @@ class ScreenshotFilterTest {
             ),
             now,
             policy,
-            emptySet(),
+            emptyMap(),
         )
         assertTrue(decision is Decision.Process)
         assertEquals(
@@ -169,7 +170,7 @@ class ScreenshotFilterTest {
             ),
             now,
             policy,
-            emptySet(),
+            emptyMap(),
         )
         assertTrue(decision is Decision.Process)
         assertEquals(
@@ -189,7 +190,7 @@ class ScreenshotFilterTest {
             ),
             now,
             policy,
-            emptySet(),
+            emptyMap(),
         )
         assertTrue(decision is Decision.Process)
     }
@@ -206,7 +207,7 @@ class ScreenshotFilterTest {
             ),
             now,
             policy,
-            emptySet(),
+            emptyMap(),
         )
         assertTrue(decision is Decision.Skip)
         assertEquals(SkipReason.NOT_SCREENSHOT, (decision as Decision.Skip).reasonCode)
@@ -223,7 +224,7 @@ class ScreenshotFilterTest {
             ),
             now,
             policy,
-            emptySet(),
+            emptyMap(),
         )
         assertTrue(decision is Decision.Skip)
         assertEquals(SkipReason.NOT_SCREENSHOT, (decision as Decision.Skip).reasonCode)
@@ -241,9 +242,43 @@ class ScreenshotFilterTest {
             ),
             now,
             phoneOnlyPolicy,
-            emptySet(),
+            emptyMap(),
         )
         assertTrue(decision is Decision.Skip)
         assertEquals(SkipReason.NOT_SCREENSHOT, (decision as Decision.Skip).reasonCode)
+    }
+
+    @Test
+    fun processedScreenshotEditedToNewSize_isHandledAgain() {
+        // Enlarged to 2160x4800, then a crop was saved over the same file.
+        val decision = ScreenshotFilter.evaluate(
+            baseRow(id = 42L, width = 462, height = 899),
+            now,
+            policy,
+            processed = mapOf(42L to ProcessedSize(2160, 4800)),
+        )
+        assertTrue(decision is Decision.Process)
+    }
+
+    @Test
+    fun legacyEntryWithUnknownSize_isStillSkipped() {
+        val decision = ScreenshotFilter.evaluate(
+            baseRow(id = 42L, width = 462, height = 899),
+            now,
+            policy,
+            processed = mapOf(42L to ProcessedSize.UNKNOWN),
+        )
+        assertEquals(SkipReason.ALREADY_PROCESSED, (decision as Decision.Skip).reasonCode)
+    }
+
+    @Test
+    fun oldScreenshotEditedRecently_countsAsRecent() {
+        val decision = ScreenshotFilter.evaluate(
+            baseRow(dateAddedSec = now - 3_600L, dateModifiedSec = now - 3L, width = 1080, height = 900),
+            now,
+            policy,
+            emptyMap(),
+        )
+        assertTrue(decision is Decision.Process)
     }
 }

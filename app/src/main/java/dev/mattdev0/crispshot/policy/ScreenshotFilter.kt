@@ -2,6 +2,19 @@ package dev.mattdev0.crispshot.policy
 
 import dev.mattdev0.crispshot.media.MediaRow
 
+/**
+ * Size a screenshot had when Crispshot last finished with it (after enlarging or restoring it).
+ * A different size later means the file was edited, for example cropped, and is handled again.
+ * [UNKNOWN] matches any size.
+ */
+data class ProcessedSize(val width: Int, val height: Int) {
+    fun matches(w: Int, h: Int): Boolean = this == UNKNOWN || (width == w && height == h)
+
+    companion object {
+        val UNKNOWN = ProcessedSize(-1, -1)
+    }
+}
+
 /** Structured reason for skipping a MediaStore row. */
 enum class SkipReason {
     NOT_SCREENSHOT,
@@ -27,7 +40,7 @@ object ScreenshotFilter {
         row: MediaRow,
         nowEpochSec: Long,
         policy: HdPolicy,
-        processedIds: Set<Long>,
+        processed: Map<Long, ProcessedSize>,
     ): Decision {
         if (!matchesAnySource(row, policy.sources)) {
             return Decision.Skip(
@@ -41,9 +54,10 @@ object ScreenshotFilter {
                 "pending (is_pending=${row.isPending})",
             )
         }
-        val minDateAddedSec = nowEpochSec - policy.recentWindowSec
-        if (row.dateAddedSec < minDateAddedSec) {
-            val ageSec = nowEpochSec - row.dateAddedSec
+        // An edit (e.g. a crop saved over the same file) counts as new, so use the latest change.
+        val lastChangeSec = maxOf(row.dateAddedSec, row.dateModifiedSec)
+        if (lastChangeSec < nowEpochSec - policy.recentWindowSec) {
+            val ageSec = nowEpochSec - lastChangeSec
             return Decision.Skip(
                 SkipReason.TOO_OLD,
                 "too old (age=${ageSec}s > ${policy.recentWindowSec}s)",
@@ -55,7 +69,8 @@ object ScreenshotFilter {
                 "unsupported mime (${row.mimeType})",
             )
         }
-        if (row.id in processedIds) {
+        val recorded = processed[row.id]
+        if (recorded != null && recorded.matches(row.width, row.height)) {
             return Decision.Skip(
                 SkipReason.ALREADY_PROCESSED,
                 "already processed (id=${row.id})",
