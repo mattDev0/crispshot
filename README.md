@@ -1,5 +1,9 @@
 # Crispshot
 
+[![CI](https://github.com/mattDev0/crispshot/actions/workflows/ci.yml/badge.svg)](https://github.com/mattDev0/crispshot/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/mattDev0/crispshot)](https://github.com/mattDev0/crispshot/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Crispshot keeps screenshots sharp when you send them on WhatsApp.
 
 WhatsApp only offers its **HD** photo option for large images. A typical phone screenshot (1080×2400) or
@@ -76,8 +80,34 @@ and pick it.
 ## Building
 
 ```bash
-./gradlew :app:testDebugUnitTest :app:assembleDebug
+./gradlew :app:lintRelease :app:testDebugUnitTest :app:assembleRelease
 ```
+
+Release builds are unsigned unless `CRISPSHOT_KEYSTORE_FILE`, `CRISPSHOT_KEYSTORE_PASSWORD`,
+`CRISPSHOT_KEY_ALIAS` and `CRISPSHOT_KEY_PASSWORD` are set.
+
+## CI/CD
+
+- **CI** (`.github/workflows/ci.yml`) runs on every push and pull request: Gradle wrapper validation, Android
+  Lint, unit tests and a release build. Test results go to the job summary, and reports and the APK are
+  uploaded as artifacts.
+- **Release** (`.github/workflows/release.yml`) runs when a `v*` tag is pushed. It checks that the tag matches
+  `versionName`, builds and signs the APK with the release key from encrypted secrets, and verifies the
+  signing certificate against a pinned fingerprint. It then publishes the APK and its SHA-256 checksum as a
+  GitHub release, using the annotated tag message as the release notes.
+- **Dependabot** opens weekly update PRs for Gradle dependencies and GitHub Actions. Actions are pinned to
+  commit SHAs.
+
+## Verifying a download
+
+Releases from 1.0.2 onward are signed with this certificate (SHA-256):
+
+```
+55:38:F8:7D:A6:E4:C3:1F:B0:C6:A0:52:4A:26:B6:B2:1E:80:A7:C5:93:65:B0:89:6C:E2:93:04:F4:71:2B:A1
+```
+
+Check with `apksigner verify --print-certs Crispshot-<version>.apk`, and compare the APK against the
+`.sha256` file attached to the release.
 
 ## License
 
