@@ -16,19 +16,25 @@ send.
 A screenshot is the same size as your screen's current resolution. Whether WhatsApp offers HD depends on
 the screenshot's long side:
 
-| Screenshot long side | Typical phones | WhatsApp HD |
-|---|---|---|
-| Up to about 2460 px | Most phones at 1080p (FHD+), e.g. 1080×2400, 1080×2340, 1080×2412 | Not offered: **Crispshot helps** |
-| About 2500–2799 px | 1.5K screens, e.g. 1220×2712 | Varies. Some report HD works without help |
-| 2800 px or more | QHD+ phones at full resolution, e.g. 1440×3120, 1440×3200 | Offered: you don't need Crispshot |
+| Screenshot long side | Typical phones | Full screenshot | Cropped screenshot |
+|---|---|---|---|
+| Up to about 2460 px | Most phones at 1080p (FHD+), e.g. 1080×2400, 1080×2340, 1080×2412 | No HD | No HD |
+| About 2500–2799 px | 1.5K screens, e.g. 1220×2712 | Varies; some get HD | No HD |
+| 2800 px or more | QHD+ phones at full resolution, e.g. 1440×3120, 1440×3200 | HD | No HD |
 
-Many QHD+ phones ship set to a lower 1080p display mode to save battery, so their screenshots fall in the
-first row unless full resolution is turned on in display settings.
+**Cropping is the catch on every phone.** Cutting a screenshot down to the part that matters makes it
+too small for HD, even on a high-resolution screen. With Crispshot, full and cropped screenshots both go
+out in HD. A crop is enlarged 2×, 3× or 4×, whichever is the smallest that's enough, and very small crops
+are scaled up to the minimum HD size.
+
+Many QHD+ phones ship set to a lower 1080p display mode to save battery, so their full screenshots fall in
+the first row unless full resolution is turned on in display settings.
 
 To check your phone, take a screenshot, send it to yourself on WhatsApp, and see whether the **HD** button
 appears. You can also open the screenshot's details in your gallery app to see its size.
 
-Crispshot leaves screenshots that are already 2800 px or more untouched.
+Crispshot leaves screenshots that are already large enough untouched. Crops are handled whether your
+screenshot editor saves over the original or saves a new copy.
 
 ## How it works
 
