@@ -6,15 +6,17 @@ plugins {
 android {
     namespace 'dev.mattdev0.crispshot'
     compileSdk {
-        version = release(37)
+        version = release(37) {
+            minorApiLevel = 1
+        }
     }
 
     defaultConfig {
         applicationId "dev.mattdev0.crispshot"
         minSdk 30
         targetSdk 37
-        versionCode 4
-        versionName "1.0.3"
+        versionCode 5
+        versionName "1.1.0"
 
     }
 

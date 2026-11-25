@@ -12,12 +12,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -60,7 +61,10 @@ class MainActivity : ComponentActivity() {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
                     if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
                 dark -> darkColorScheme(primary = BrandIndigoLight, secondary = BrandVioletLight)
-                else -> lightColorScheme(primary = BrandIndigo, secondary = BrandViolet)
+                else -> expressiveLightColorScheme().copy(
+                    primary = BrandIndigo,
+                    secondary = BrandViolet,
+                )
             }
 
             val autoHdEnabled by app.settings.enabledFlow.collectAsStateWithLifecycle(initialValue = false)
@@ -96,7 +100,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            MaterialTheme(colorScheme = colors) {
+            MaterialExpressiveTheme(
+                colorScheme = colors,
+                motionScheme = MotionScheme.expressive(),
+            ) {
                 MainScreen(
                     setup = setupStatus,
                     autoHdEnabled = autoHdEnabled,
